@@ -9,6 +9,7 @@
         --blur-val: 45px;
         --sat-val: 2.5;
         --glow-opacity: 0.9;
+        --bg-color: #131314;
       }
 
       html,
@@ -17,8 +18,8 @@
         padding: 0;
         width: 100%;
         height: 100%;
-        background: transparent !important;
-        background-color: transparent !important;
+        background: var(--bg-color, #131314) !important;
+        background-color: var(--bg-color, #131314) !important;
         overflow: hidden;
         display: flex;
         align-items: center;
@@ -99,6 +100,8 @@
       const initOpacity = params.get("opacity");
       const initPulse = params.get("pulse");
 
+      const initBg = params.get("bg");
+      if (initBg) document.documentElement.style.setProperty("--bg-color", decodeURIComponent(initBg));
       if (initBlur) document.documentElement.style.setProperty("--blur-val", `${initBlur}px`);
       if (initSat) document.documentElement.style.setProperty("--sat-val", initSat);
       if (initOpacity !== null && initOpacity !== undefined) {
@@ -185,6 +188,9 @@
             glowPlayer.mute();
           }
         } else if (e.data.type === "updateSettings") {
+          if (e.data.bg !== undefined) {
+            document.documentElement.style.setProperty("--bg-color", e.data.bg);
+          }
           if (e.data.blur !== undefined) {
             document.documentElement.style.setProperty("--blur-val", `${e.data.blur}px`);
           }
