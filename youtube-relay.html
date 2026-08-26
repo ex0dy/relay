@@ -39,12 +39,20 @@
         height: 100%;
         z-index: 1;
         filter: blur(var(--blur-val, 32px)) saturate(var(--sat-val, 3.5)) brightness(1.15);
-        transform: scale(1.06);
+        transform: scale(1.08);
         opacity: var(--glow-opacity, 0.85);
         pointer-events: none;
         border-radius: 24px;
         overflow: hidden;
-        transition: filter 0.15s ease, opacity 0.15s ease;
+        transition: filter 0.15s ease, opacity 0.25s ease;
+      }
+
+      #glow-thumb {
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 24px;
+        transform: scale(1.14);
       }
 
       .glow-layer.pulsing {
@@ -74,7 +82,7 @@
         overflow: hidden;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
         background: #000;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: none;
       }
 
       iframe {
@@ -87,6 +95,7 @@
   </head>
   <body>
     <div class="ambient-box">
+      <div id="glow-thumb" class="glow-layer"></div>
       <div id="glow-player" class="glow-layer"></div>
       <div id="main-player" class="main-layer"></div>
     </div>
@@ -95,6 +104,27 @@
     <script>
       const params = new URLSearchParams(location.search);
       let currentId = params.get("id") || params.get("v") || "gqvBoFpgXQA";
+      const initBlur = params.get("blur");
+      const initSat = params.get("sat");
+      const initOpacity = params.get("opacity");
+      const initPulse = params.get("pulse");
+
+      if (initBlur) document.documentElement.style.setProperty("--blur-val", `${initBlur}px`);
+      if (initSat) document.documentElement.style.setProperty("--sat-val", initSat);
+      if (initOpacity !== null && initOpacity !== undefined) {
+        document.documentElement.style.setProperty("--glow-opacity", initOpacity);
+      }
+      if (initPulse === "1" || initPulse === "true") {
+        document.querySelectorAll(".glow-layer").forEach(el => el.classList.add("pulsing"));
+      }
+
+      const glowThumb = document.getElementById("glow-thumb");
+      function updateThumbnail(id) {
+        if (glowThumb && id) {
+          glowThumb.style.backgroundImage = `url('https://i.ytimg.com/vi/${id}/hqdefault.jpg')`;
+        }
+      }
+      updateThumbnail(currentId);
 
       let mainPlayer = null;
       let glowPlayer = null;
@@ -137,6 +167,7 @@
         glowPlayer.seekTo(mainPlayer.getCurrentTime(), true);
 
         if (event.data === YT.PlayerState.PLAYING) {
+          if (glowThumb) glowThumb.style.opacity = "0";
           glowPlayer.playVideo();
         } else if (event.data === YT.PlayerState.PAUSED) {
           glowPlayer.pauseVideo();
@@ -167,6 +198,7 @@
         if (!e.data) return;
         if (e.data.type === "loadVideo" && e.data.videoId) {
           currentId = e.data.videoId;
+          updateThumbnail(currentId);
           if (mainPlayer?.loadVideoById && glowPlayer?.loadVideoById) {
             mainPlayer.loadVideoById(currentId);
             glowPlayer.loadVideoById(currentId);
@@ -183,7 +215,7 @@
             document.documentElement.style.setProperty("--glow-opacity", e.data.opacity);
           }
           if (e.data.pulse !== undefined) {
-            document.querySelector(".glow-layer")?.classList.toggle("pulsing", !!e.data.pulse);
+            document.querySelectorAll(".glow-layer").forEach(el => el.classList.toggle("pulsing", !!e.data.pulse));
           }
         }
       });
